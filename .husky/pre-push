@@ -42,7 +42,7 @@ if [ -n "$BASE_BRANCH" ]; then
                 README.md|README|readme.md|*.md)
                     # Root markdown files are exempt
                     ;;
-                docs/*|scripts/*|.github/*|.changeset/*)
+                docs/*|scripts/*|.github/*|.changeset/*|.husky/*)
                     # These directories are exempt
                     ;;
                 *.json|*.yaml|*.yml|*.xml|.eslintrc*|.prettierrc*|.editorconfig|.gitignore|.npmrc|pnpm-workspace.yaml)
