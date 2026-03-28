@@ -1,0 +1,90 @@
+#!/usr/bin/env sh
+
+# Pre-push hook to remind developers to add changesets
+# This hook checks if a changeset file exists for the current branch
+# and prompts the developer to create one if missing.
+
+# Get current branch name
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Skip check if pushing to base branches
+if [ "$CURRENT_BRANCH" = "next" ] || [ "$CURRENT_BRANCH" = "master" ] || [ "$CURRENT_BRANCH" = "main" ]; then
+    exit 0
+fi
+
+# Count changeset files (excluding config.json and README.md)
+CHANGESET_COUNT=$(find .changeset -maxdepth 1 -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
+
+# If changesets exist, allow push
+if [ "$CHANGESET_COUNT" -gt 0 ]; then
+    exit 0
+fi
+
+# No changeset found - check if this is an interactive terminal
+if [ -t 0 ]; then
+    # Interactive terminal - prompt the user
+    echo ""
+    echo "=========================================="
+    echo "  No changeset found for this branch!"
+    echo "=========================================="
+    echo ""
+    echo "Changesets are required to track version updates for packages."
+    echo "They help automate the release process by documenting what changed."
+    echo ""
+    printf "Would you like to create a changeset now? [Y/n] "
+    read -r REPLY
+
+    # Default to Yes if user just presses Enter
+    if [ -z "$REPLY" ] || [ "$REPLY" = "y" ] || [ "$REPLY" = "Y" ] || [ "$REPLY" = "yes" ] || [ "$REPLY" = "Yes" ]; then
+        echo ""
+        echo "Running 'pnpm changeset'..."
+        echo ""
+        pnpm changeset
+
+        # Check if changeset was created
+        NEW_CHANGESET_COUNT=$(find .changeset -maxdepth 1 -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
+
+        if [ "$NEW_CHANGESET_COUNT" -gt 0 ]; then
+            echo ""
+            echo "Changeset created! Adding to commit..."
+            git add .changeset/*.md
+            git commit --amend --no-edit
+            echo ""
+            echo "Changeset added. Continuing with push..."
+            exit 0
+        else
+            echo ""
+            echo "No changeset was created. Push aborted."
+            echo "Run 'pnpm changeset' manually to create one."
+            exit 1
+        fi
+    else
+        echo ""
+        echo "Skipping changeset creation."
+        echo ""
+        printf "Push anyway without a changeset? [y/N] "
+        read -r FORCE_REPLY
+
+        if [ "$FORCE_REPLY" = "y" ] || [ "$FORCE_REPLY" = "Y" ] || [ "$FORCE_REPLY" = "yes" ] || [ "$FORCE_REPLY" = "Yes" ]; then
+            echo "Continuing without changeset..."
+            exit 0
+        else
+            echo "Push aborted. Run 'pnpm changeset' to create a changeset."
+            exit 1
+        fi
+    fi
+else
+    # Non-interactive (GUI tools) - block and require changeset
+    # Output to stderr so GUI tools display it
+    echo "" >&2
+    echo "PUSH BLOCKED: Missing changeset!" >&2
+    echo "" >&2
+    echo "To fix this, run in your terminal:" >&2
+    echo "" >&2
+    echo "    pnpm changeset" >&2
+    echo "" >&2
+    echo "Then commit the changeset and push again." >&2
+    echo "To skip this check, use: git push --no-verify" >&2
+    echo "" >&2
+    exit 1
+fi
