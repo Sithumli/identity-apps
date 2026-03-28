@@ -21,7 +21,8 @@ if [ "$CHANGESET_COUNT" -gt 0 ]; then
 fi
 
 # No changeset found - check if this is an interactive terminal
-if [ -t 0 ]; then
+# Try to open /dev/tty for interactive prompts (git hooks don't have stdin connected)
+if [ -t 1 ] && [ -e /dev/tty ]; then
     # Interactive terminal - prompt the user
     echo ""
     echo "=========================================="
@@ -32,7 +33,7 @@ if [ -t 0 ]; then
     echo "They help automate the release process by documenting what changed."
     echo ""
     printf "Would you like to create a changeset now? [Y/n] "
-    read -r REPLY
+    read -r REPLY < /dev/tty
 
     # Default to Yes if user just presses Enter
     if [ -z "$REPLY" ] || [ "$REPLY" = "y" ] || [ "$REPLY" = "Y" ] || [ "$REPLY" = "yes" ] || [ "$REPLY" = "Yes" ]; then
@@ -63,7 +64,7 @@ if [ -t 0 ]; then
         echo "Skipping changeset creation."
         echo ""
         printf "Push anyway without a changeset? [y/N] "
-        read -r FORCE_REPLY
+        read -r FORCE_REPLY < /dev/tty
 
         if [ "$FORCE_REPLY" = "y" ] || [ "$FORCE_REPLY" = "Y" ] || [ "$FORCE_REPLY" = "yes" ] || [ "$FORCE_REPLY" = "Yes" ]; then
             echo "Continuing without changeset..."
