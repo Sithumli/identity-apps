@@ -40,7 +40,7 @@ if [ -t 1 ] && [ -e /dev/tty ]; then
         echo ""
         echo "Running 'pnpm changeset'..."
         echo ""
-        pnpm changeset
+        pnpm changeset < /dev/tty
 
         # Check if changeset was created
         NEW_CHANGESET_COUNT=$(find .changeset -maxdepth 1 -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
