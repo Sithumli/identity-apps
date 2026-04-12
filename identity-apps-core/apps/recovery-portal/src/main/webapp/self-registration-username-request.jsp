@@ -1176,7 +1176,7 @@
                                                 class="form-control"
                                                 onblur="showFieldValidationStatus(this)"
                                                 oninput="hideFieldValidationStatus(this)"
-                                                <% if (claim.getValidationRegex() != null) { %>
+                                                <% if (claim.getValidationRegex() != null && !StringUtils.equals(claim.getUri(), "http://wso2.org/claims/mobile")) { %>
                                                 pattern="<%= Encode.forHtmlContent(claim.getValidationRegex()) %>"
                                                 <% } %>
                                                 <% if (claim.getRequired()) { %>
@@ -3165,7 +3165,7 @@
             var mobile_field = $("#mobile_field");
 
             if (mobileNumber != null && mobileNumber.value != null && mobileNumber.value.trim() !== ""){
-                var mobilePattern = /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})?[-. )]*(\d{3})?[-. ]*(\d{4,6})(?: *x(\d+))?\s*$/;
+                var mobilePattern = /^\+[1-9]\d{9,14}$/;
                 if (!mobilePattern.test(mobileNumber.value)) {
                     mobile_error_msg_text.text("<%=IdentityManagementEndpointUtil.i18n(recoveryResourceBundle, "mobile.number.format.error")%>")
                     mobile_error_msg.show();
